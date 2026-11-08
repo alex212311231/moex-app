@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>MOEX Quant</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{--bg:#0a0c0f;--card:#12161b;--line:#1f252d;--text:#e9eef3;--muted:#7f8996;--accent:#c6f54b;--cyan:#4fd8f2;--warn:#ffb84d;--bad:#ff5f6d}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{padding:18px 16px 40px;max-width:560px;margin:0 auto}
+.num{font-variant-numeric:tabular-nums}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.brand{font-weight:700;letter-spacing:.2px}.brand span{color:var(--accent)}
+.sub{color:var(--muted);font-size:12px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;background:#171c22;border:1px solid var(--line);font-size:12px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}
+.dot.on{background:var(--accent);box-shadow:0 0 10px var(--accent);animation:pulse 1.6s infinite}
+.dot.warn{background:var(--warn)}.dot.bad{background:var(--bad)}
+@keyframes pulse{50%{opacity:.45}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px;opacity:0;transform:translateY(10px);animation:rise .45s ease forwards;cursor:pointer;transition:border-color .2s,transform .15s}
+.card:active{transform:scale(.985)}
+.card:hover{border-color:#2b333d}
+@keyframes rise{to{opacity:1;transform:none}}
+.label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1.1px;margin-bottom:8px;display:flex;justify-content:space-between}
+.title{font-size:20px;font-weight:700;margin-bottom:2px}
+.big{font-size:34px;font-weight:700;color:var(--accent);line-height:1.1}
+.bar{height:6px;background:#1c222a;border-radius:6px;overflow:hidden;margin:10px 0 6px}
+.bar i{display:block;height:100%;width:0;border-radius:6px;background:var(--accent);transition:width 1s cubic-bezier(.2,.8,.2,1)}
+.bar.cyan i{background:var(--cyan)}.bar.warn i{background:var(--warn)}.bar.bad i{background:var(--bad)}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.muted{color:var(--muted)}
+.quote{margin-top:10px;padding:10px 12px;border-left:2px solid var(--accent);background:#0f1317;border-radius:0 10px 10px 0;font-size:14px}
+.steps{display:flex;gap:4px;margin-top:10px}.steps b{flex:1;height:4px;border-radius:3px;background:#1c222a}
+.steps b.d{background:var(--accent)}.steps b.c{background:var(--accent);opacity:.45;animation:pulse 1.6s infinite}
+.chips{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.chip{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-size:12px;background:#1a2027;color:var(--muted)}
+.chip.d{background:rgba(198,245,75,.14);color:var(--accent)}.chip.c{background:var(--accent);color:#0a0c0f;font-weight:700}
+.ev{display:flex;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:14px}.ev:first-of-type{border-top:0}
+.ev time{color:var(--muted);min-width:42px}
+.btns{display:flex;gap:8px;margin-top:12px}
+button{flex:1;border:0;border-radius:12px;padding:12px;font:600 15px system-ui;cursor:pointer;transition:transform .12s,opacity .2s}
+button:active{transform:scale(.97)}
+.yes{background:var(--accent);color:#0a0c0f}.no{background:#1c222a;color:var(--text)}
+textarea{width:100%;min-height:84px;margin-top:8px;padding:12px;border-radius:12px;border:1px solid var(--line);background:#0f1317;color:var(--text);font:15px system-ui;resize:vertical}
+textarea:focus{outline:none;border-color:var(--accent)}
+.hint{font-size:13px;color:var(--muted);margin-top:8px}
+.veil{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-width:560px;margin:0 auto;max-height:82vh;overflow:auto;background:#101419;border-top:1px solid var(--line);border-radius:20px 20px 0 0;padding:10px 18px 28px;transform:translateY(100%);transition:transform .32s cubic-bezier(.2,.8,.2,1)}
+.sheet:before{content:"";display:block;width:38px;height:4px;border-radius:4px;background:#2a313a;margin:0 auto 14px}
+.open .veil{opacity:1;pointer-events:auto}.open .sheet{transform:none}
+.sheet h3{font-size:18px;margin-bottom:10px}.sheet p{margin:8px 0;color:#c9d1da}
+.li{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--line)}.li:first-of-type{border-top:0}
+.li .m{width:18px;color:var(--muted)}.li.d .m{color:var(--accent)}.li.c{color:var(--accent);font-weight:600}
+.empty{text-align:center;color:var(--muted);padding:60px 10px}
+</style>
+</head>
+<body>
+<header><div><div class="brand">MOEX <span>Quant</span></div><div class="sub" id="upd"></div></div><div class="pill" id="pill"><span class="dot"></span><span>…</span></div></header>
+<main id="app"></main>
+<div id="layer"><div class="veil" onclick="closeSheet()"></div><div class="sheet" id="sheet"></div></div>
+<script>
+const tg = window.Telegram && window.Telegram.WebApp;
+if (tg) { tg.ready(); tg.expand(); try { tg.setHeaderColor('#0a0c0f'); tg.setBackgroundColor('#0a0c0f'); } catch (e) {} }
+const canSend = !!(tg && tg.platform !== 'unknown' && !(tg.initDataUnsafe && tg.initDataUnsafe.query_id));
+const STEPS = ['исследование','планирование','реализация','тесты','исправления','повторные тесты','аудит','ревью ChatGPT','разбор ревью','исправления по ревью','итоговая проверка','документация','отчёт','коммит','завершение'];
+const STATUS = {running:['Идёт работа','on'],paused_limit:['Пауза — лимит','warn'],waiting_decision:['Ждёт решения','warn'],waiting_answer:['Ждёт ответа','warn'],stopped:['Остановлено',''],failed:['Ошибка','bad'],done:['Готово','on'],idle:['Ожидание','']};
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pct = f => Math.round(Math.max(0, Math.min(1, f)) * 100) + '%';
+const hhmm = t => new Date(t * 1000).toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'});
+function dur(sec) { sec = Math.max(0, sec | 0); const m = Math.floor(sec / 60), h = Math.floor(m / 60), d = Math.floor(h / 24);
+  if (d) return d + ' дн ' + (h % 24) + ' ч'; if (h) return h + ' ч ' + String(m % 60).padStart(2, '0') + ' мин'; return m ? m + ' мин' : 'меньше минуты'; }
+function when(t) { const a = new Date(t * 1000), n = new Date(); const same = a.toDateString() === n.toDateString();
+  return same ? 'в ' + hhmm(t) : a.toLocaleDateString('ru-RU', {weekday: 'short', day: '2-digit', month: '2-digit'}) + ' ' + hhmm(t); }
+
+async function payload() {
+  const part = location.hash.slice(1).split('&').find(p => p.startsWith('d='));
+  if (!part) return null;
+  let s = decodeURIComponent(part.slice(2)).replace(/-/g, '+').replace(/_/g, '/');
+  while (s.length % 4) s += '=';
+  const bytes = Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  return JSON.parse(await new Response(stream).text());
+}
+function send(obj, note) {
+  if (!canSend) return;
+  if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+  tg.sendData(JSON.stringify(obj));
+}
+function openSheet(html) { document.getElementById('sheet').innerHTML = html; document.getElementById('layer').className = 'open'; }
+function closeSheet() { document.getElementById('layer').className = ''; }
+
+let D = null, delay = 0;
+const card = (label, body, onclick, extra) => `<section class="card" style="animation-delay:${(delay += 60)}ms" ${onclick ? `onclick="${onclick}"` : ''}><div class="label"><span>${label}</span>${extra || ''}</div>${body}</section>`;
+
+function render() {
+  const app = document.getElementById('app'); delay = 0;
+  const [stLabel, stCls] = STATUS[D.s] || [D.s, ''];
+  document.getElementById('pill').innerHTML = `<span class="dot ${stCls}"></span><span>${esc(stLabel)}</span>`;
+  document.getElementById('upd').textContent = 'данные на ' + hhmm(D.t);
+  let h = '';
+  const st = D.st;
+  if (st) {
+    const frac = (st.step || 0) / 15;
+    let steps = ''; for (let i = 1; i <= 15; i++) steps += `<b class="${i < st.step ? 'd' : i === st.step ? 'c' : ''}"></b>`;
+    h += card('Сейчас', `<div class="title">Stage ${st.n} · ${esc(st.name)}</div>
+      <div class="row"><span class="muted">${st.step ? 'шаг ' + st.step + ' из 15 — ' + esc(st.sn) : 'не начат'}</span><span class="num">${pct(frac)}</span></div>
+      <div class="steps">${steps}</div>${st.doing ? `<div class="quote">${esc(st.doing)}</div>` : ''}
+      ${D.ra ? `<div class="hint">Продолжу ${when(D.ra)} · через <span data-cd="${D.ra}">${dur(D.ra - Date.now() / 1000)}</span></div>` : ''}`, 'showSteps()');
+  }
+  if (D.d && D.d.length) {
+    D.d.forEach((d, i) => {
+      const btns = canSend ? `<div class="btns">${d.b.map(([t, c]) => `<button class="${c === 'N' ? 'no' : 'yes'}" onclick="event.stopPropagation();decide('${d.id}','${c}')">${esc(t)}</button>`).join('')}</div>`
+                           : `<div class="hint">Ответить можно кнопками на панели в чате.</div>`;
+      h += card('Нужно ваше решение', `<div>${esc(d.q)}</div>${btns}`, `showDecision(${i})`);
+    });
+  }
+  const p = D.p;
+  h += card('Проект', `<div class="row"><div class="big num">${pct(p.pct)}</div><div class="muted">${p.done} из ${p.total} этапов</div></div>
+    <div class="bar"><i data-w="${p.pct}"></i></div><div class="chips">${p.stages.map((s, i) => `<span class="chip ${s[1] === 2 ? 'd' : s[1] === 1 ? 'c' : ''}">${i + 1}</span>`).join('')}</div>`, 'showStages()');
+  if (D.l && D.l.length) {
+    h += card('Лимиты Claude', D.l.map(([name, u, r]) => {
+      const cls = u >= .97 ? 'bad' : u >= .8 ? 'warn' : 'cyan';
+      return `<div class="row" style="margin-top:6px"><span>${esc(name)}</span><span class="num">${pct(u)}</span></div><div class="bar ${cls}"><i data-w="${u}"></i></div>
+        <div class="sub">${r ? 'сброс ' + when(r) + ' · через <span data-cd="' + r + '">' + dur(r - Date.now() / 1000) + '</span>' : 'окно обновилось'}</div>`;
+    }).join(''), 'showLimits()');
+  }
+  if (D.r) h += card('Последний итог', `<div style="display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">${esc(D.r)}</div>`, 'showResult()');
+  if (D.c && D.c.length) h += card('Хроника', D.c.slice(-5).reverse().map(([t, x]) => `<div class="ev"><time>${hhmm(t)}</time><span>${esc(x)}</span></div>`).join(''), 'showChronicle()');
+  h += card('Правка или задача для Claude', canSend
+    ? `<textarea id="note" placeholder="Например: добавь в отчёт график по годам" onclick="event.stopPropagation()"></textarea><div class="btns"><button class="yes" onclick="event.stopPropagation();sendNote()">Отправить Claude</button></div>`
+    : `<div class="hint">Напишите сообщение в чат — оно уйдёт Claude. Отправлять прямо отсюда можно, если открыть приложение кнопкой «📱 Приложение» под полем ввода.</div>`, '');
+  app.innerHTML = h;
+  requestAnimationFrame(() => setTimeout(() => document.querySelectorAll('[data-w]').forEach(e => e.style.width = pct(+e.dataset.w)), 80));
+}
+function tick() { document.querySelectorAll('[data-cd]').forEach(e => e.textContent = dur(+e.dataset.cd - Date.now() / 1000)); }
+function decide(id, c) { send({a: 'decide', id, c}); }
+function sendNote() { const t = document.getElementById('note').value.trim(); if (t) send({a: 'note', text: t.slice(0, 2000)}); }
+function showSteps() { const st = D.st; openSheet(`<h3>Stage ${st.n} · ${esc(st.name)}</h3>` + STEPS.map((s, i) => { const n = i + 1, c = n < st.step ? 'd' : n === st.step ? 'c' : '';
+  return `<div class="li ${c}"><span class="m">${c === 'd' ? '✓' : c === 'c' ? '▸' : n}</span><span>${s}</span></div>`; }).join('') + (st.doing ? `<p>${esc(st.doing)}</p>` : '')); }
+function showStages() { openSheet('<h3>Этапы проекта</h3>' + D.p.stages.map(([n, s], i) => `<div class="li ${s === 2 ? 'd' : s === 1 ? 'c' : ''}"><span class="m">${s === 2 ? '✓' : s === 1 ? '▸' : i + 1}</span><span>${esc(n)}</span></div>`).join('')); }
+function showLimits() { openSheet('<h3>Лимиты подписки</h3>' + D.l.map(([n, u, r]) => `<p><b>${esc(n)}: ${pct(u)}</b><br>${r ? 'Сброс ' + when(r) + ', через ' + dur(r - Date.now() / 1000) : 'Окно уже обновилось'}</p>`).join('') +
+  '<p class="muted">Когда лимит заканчивается, работа встаёт на паузу и продолжается сама после сброса, если компьютер включён.</p>'); }
+function showResult() { openSheet(`<h3>Последний итог</h3><p style="white-space:pre-wrap">${esc(D.r)}</p>`); }
+function showChronicle() { openSheet('<h3>Хроника</h3>' + D.c.slice().reverse().map(([t, x]) => `<div class="ev"><time>${hhmm(t)}</time><span>${esc(x)}</span></div>`).join('')); }
+function showDecision(i) { const d = D.d[i]; openSheet(`<h3>Решение</h3><p style="white-space:pre-wrap">${esc(d.q)}</p>` + (canSend ? `<div class="btns">${d.b.map(([t, c]) => `<button class="${c === 'N' ? 'no' : 'yes'}" onclick="decide('${d.id}','${c}')">${esc(t)}</button>`).join('')}</div>` : '<p class="muted">Ответьте кнопками на панели в чате.</p>')); }
+
+payload().then(d => {
+  if (!d) { document.getElementById('app').innerHTML = '<div class="empty">Нет данных.<br>Откройте приложение кнопкой в чате с ботом.</div>'; return; }
+  D = d; render(); setInterval(tick, 30000);
+}).catch(() => { document.getElementById('app').innerHTML = '<div class="empty">Не удалось прочитать данные.<br>Откройте приложение заново из чата.</div>'; });
+</script>
+</body>
+</html>
